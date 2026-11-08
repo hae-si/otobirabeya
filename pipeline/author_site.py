@@ -296,6 +296,7 @@ def build(args):
         if not observations['meta'].get('catalog_complete') or json.loads((probe/'endpoint_probe.json').read_bytes()).get('access_stopped'):
             raise ValueError('Complete bounded catalog required before fourth-layer publication; retain current website')
         integrate_interactions(current,observations)
+        apply_cached_display_names(current,observations)
         observations['meta']['collection_audit']=collection_audit
         observations['meta']['event_audit']=event_audit
         current['meta']['interaction']['collection_audit']=collection_audit
@@ -333,6 +334,36 @@ def sanitize_absolute_paths(value):
     elif isinstance(value, list):
         for item in value:
             sanitize_absolute_paths(item)
+
+
+def apply_cached_display_names(graph, interactions):
+    config = json.loads((ROOT/'config/data_sources.json').read_bytes())
+    value = config.get('bilibili_names')
+    if not value:
+        return
+    path = (ROOT/value).resolve()
+    if Path(value).is_absolute() or not path.is_relative_to(ROOT/'data/normalized'):
+        raise ValueError('Bilibili name cache must be inside data/normalized')
+    raw = path.read_bytes()
+    names = json.loads(raw)
+
+    def label_for(label, uids):
+        if label not in {'UID '+uid for uid in uids}:
+            return None
+        matches = {names[uid]['name'] for uid in uids if uid in names and names[uid].get('name')}
+        return next(iter(matches)) if len(matches) == 1 else None
+
+    for node in graph['nodes']:
+        label = label_for(node['label'], node.get('bilibili_uids', []))
+        if label:
+            node['display_label'] = label
+    for uid, account in interactions['accounts'].items():
+        label = label_for(account['label'], [uid])
+        if label:
+            account['display_label'] = label
+    provenance = {'file': Path(value).as_posix(), 'sha256': hashlib.sha256(raw).hexdigest()}
+    graph['meta']['bilibili_display_names'] = provenance
+    interactions['meta']['bilibili_display_names'] = provenance
 
 
 def write_frontend(output):
