@@ -1,0 +1,42 @@
+# Local source data and generated outputs
+/data/raw/*
+!/data/raw/.gitkeep
+/data/normalized/*
+!/data/normalized/.gitkeep
+/data/exports/*
+!/data/exports/.gitkeep
+
+# Temporary files and credentials
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+*.bak
+~$*
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+.cache/
+.pytest_cache/
+coverage/
+dist/
+build/
+/tmp/
+/temp/
+
+# Local captures, credential exports and build metadata
+/data/samples/*.json
+*.har
+*.sql
+*.sql.gz
+*.sqlite*
+*.db
+*.tsbuildinfo
+/web/.env*
+
+# Project documentation is local-only (user decision)
+/docs/

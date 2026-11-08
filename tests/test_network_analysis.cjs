@@ -1,0 +1,10 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{makeGraph,partition,ari,pageRank}=require('../web/network-analysis.cjs');
+const nodes=[{id:'a'},{id:'b'},{id:'isolated'},{id:'bot',accounts:[{isBot:true}]}],e={id:'f',source:'a',target:'b',type:'follow',weight:1};
+test('duplicates not counted twice; no mutation',()=>{const before=JSON.stringify(nodes);assert.equal(makeGraph(nodes,[e,e]).size,1);assert.equal(JSON.stringify(nodes),before);});
+test('zero-edge layers and isolates are explicit',()=>{const r=partition(makeGraph(nodes,[]));assert.equal(r.count,0);assert.equal(r.communities.isolated,null);});
+test('single available layer has unit mass',()=>{const g=makeGraph(nodes,[e]);assert.equal(g.getEdgeAttribute('a','b','weight'),1);});
+test('symmetric creation plus directed follow normalized per layer',()=>{const c={id:'c',source:'b',target:'a',type:'creation',weight:2};const g=makeGraph(nodes,[e,c]);let sum=0;g.forEachEdge((k,a)=>sum+=a.weight);assert.equal(sum,1);assert.equal(g.getEdgeAttribute('a','b','weight'),.75);});
+test('PageRank converges, includes dangling nodes and sums to one',()=>{const r=pageRank(makeGraph(nodes,[e]));assert.ok(r.residual<1e-12);assert.ok(Math.abs(Object.values(r.scores).reduce((a,b)=>a+b,0)-1)<1e-10);assert.ok(r.scores.b>r.scores.a);});
+test('explicit bots only are excluded; unknown accounts retained',()=>{const g=makeGraph(nodes,[e],{excludeBots:true});assert.equal(g.order,3);assert.ok(g.hasNode('isolated'));});
+test('missing endpoints and conflicting IDs fail',()=>{assert.throws(()=>makeGraph(nodes,[{...e,target:'missing'}]));assert.throws(()=>makeGraph(nodes,[e,{...e,weight:2}]));});
+test('ARI ignores group label numbering',()=>assert.equal(ari({a:0,b:0,c:1},{a:8,b:8,c:9}),1));

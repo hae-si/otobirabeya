@@ -1,0 +1,43 @@
+name: Deploy audited Pages candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha256:
+        description: SHA256 of the approved candidate ZIP
+        required: true
+        type: string
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Fetch and verify approved candidate
+        env:
+          CANDIDATE_URL: ${{ secrets.PAGES_CANDIDATE_URL }}
+          CANDIDATE_SHA256: ${{ inputs.candidate_sha256 }}
+        run: |
+          test -n "$CANDIDATE_URL"
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-filesize 1000000000 --max-time 300 --output "$RUNNER_TEMP/candidate.zip" -- "$CANDIDATE_URL"
+          python3 -m pipeline.stage_pages "$RUNNER_TEMP/candidate.zip" "$CANDIDATE_SHA256" "$RUNNER_TEMP/pages-site"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ runner.temp }}/pages-site
+      - uses: actions/deploy-pages@v4
+        id: deployment
