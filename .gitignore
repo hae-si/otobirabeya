@@ -40,3 +40,4 @@ build/
 
 # Project documentation is local-only (user decision)
 /docs/
+/AGENTS.md
