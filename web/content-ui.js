@@ -4,12 +4,13 @@ const cache=new Map();
 export function currentContent(){return edges;}
 export async function loadContent(){
   if(loaded)return edges;
-  const r=await fetch(dataUrl('content-graph.json'));if(!r.ok)throw Error('内容索引读取失败 '+r.status);
-  const data=await r.json();if(!data.meta.available)throw Error(data.meta.reason||'内容数据未构建');
+  const r=await fetch(dataUrl('content-graph.json'));if(!r.ok)throw Error('素材与原曲索引读取失败 '+r.status);
+  const data=await r.json();if(!data.meta.available)throw Error(data.meta.reason||'素材与原曲数据未构建');
   edges=data.edges;loaded=true;return edges;
 }
 export async function contentEvidence(edge,box,{el,link,fmt}){
-  const status=el('p','info-box','正在加载内容证据…');box.append(status);
+  const layer=edge.category==='2'?'原曲':'素材';
+  const status=el('p','info-box','正在加载'+layer+'证据…');box.append(status);
   try{
     if(!cache.has(edge.evidence_file)){
       const response=await fetch(dataUrl(edge.evidence_file));if(!response.ok)throw Error(response.status);
@@ -20,8 +21,8 @@ export async function contentEvidence(edge,box,{el,link,fmt}){
     if(!status.isConnected)return;
     const shard=cache.get(edge.evidence_file),record=shard.edges[edge.id];if(!record)throw Error('证据ID缺失');
     record.work_evidence=record.work_evidence_keys.map(key=>shard.work_evidence[key]);
-    status.textContent=`${edge.category==='2'?'曲目':'素材'}余弦 ${fmt(edge.similarity)} · ${record.shared_tag_count} 个共享标签 · ${record.distinct_work_tag_support} 条不同作品标签路径。内容关联不代表合作、私交或社团归属。`;
-    box.append(el('p','muted','按作品人数及分类标签数归一；IDF=ln((完整批准作品数+1)/(含标签作品数+1))。零向量不构边；符合证据门槛的内容边参与统一分组。'));
+    status.textContent=`${layer}余弦 ${fmt(edge.similarity)} · ${record.shared_tag_count} 个共享标签 · ${record.distinct_work_tag_support} 条不同作品标签路径。${layer}关联不代表合作、私交或社团归属。`;
+    box.append(el('p','muted','按作品人数及分类标签数归一；IDF=ln((完整批准作品数+1)/(含标签作品数+1))。零向量不构边；符合证据门槛的素材和原曲关联参与统一分组。'));
     if(record.confidence_flags.length)box.append(el('p','info-box','证据提示：'+record.confidence_flags.map(f=>f==='single_shared_tag'?'仅一个共享标签':'仅同一作品支持').join('；')));
     for(const tag of record.tags){
       const card=el('div','evidence-card');card.append(link('https://otodb.net/tag/'+encodeURIComponent(tag.slug||tag.tag_id),tag.name+' #'+tag.tag_id),el('p','muted',`贡献 ${fmt(tag.contribution)} · IDF ${fmt(tag.idf)} · 作品频率 ${tag.work_frequency} / 作者频率 ${tag.author_frequency}`));
@@ -35,5 +36,5 @@ export async function contentEvidence(edge,box,{el,link,fmt}){
       }
       card.append(el('p','muted',`同作品：${tag.same_works.join(', ')||'无'}；不同作品组合 ${tag.distinct_work_pairs}`));box.append(card);
     }
-  }catch(error){if(status.isConnected)status.textContent='内容证据加载失败：'+error.message;}
+  }catch(error){if(status.isConnected)status.textContent=layer+'证据加载失败：'+error.message;}
 }

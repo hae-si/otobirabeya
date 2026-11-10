@@ -1,8 +1,8 @@
 {
   "social_dataset": "data/normalized/otomadsite/snowball-round14-20261029.json",
-  "otodb_snapshot": "data/raw/m1/otodb-20261029-040009.sql.gz",
+  "otodb_snapshot": "data/raw/m1/otodb-20261104-120006.sql.gz",
   "bilibili_collection": "data/normalized/bilibili/catalog-final-collection-20261030",
-  "bilibili_review": "data/normalized/bilibili/catalog-final-review-20261030-v5",
+  "bilibili_review": "data/normalized/bilibili/catalog-final-review-otodb-20261104",
   "bilibili_manifest": "data/normalized/bilibili/catalog-final-20261030/manifest.json",
   "bilibili_names": "data/normalized/bilibili/account-names-20261031/uid_names.json"
 }

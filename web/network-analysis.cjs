@@ -49,4 +49,14 @@ function followRanking(nodes,edges){
   const {aggregateAuthorFollows}=require('./author-follow.cjs');
   return pageRank(makeGraph(socialNodes,aggregateAuthorFollows(edges).edges,{creationShare:0}));
 }
-module.exports={makeGraph,makeDirectedWeightedGraph,partition,ari,pageRank,followRanking};
+function applyInteractionRanking(graph){
+  const edges=(graph.interaction_edges||[]).filter(e=>e.analysis_enabled&&e.analysis_weight>0);
+  const ids=new Set(edges.flatMap(e=>[e.source,e.target]));
+  const nodes=graph.nodes.filter(n=>ids.has(n.id));
+  const weighted=edges.map(e=>({...e,weight:e.analysis_weight}));
+  const alpha=.85;
+  const {scores,iterations,residual}=pageRank(makeDirectedWeightedGraph(nodes,weighted),{alpha});
+  for(const node of graph.nodes)node.interaction_pagerank=scores[node.id]??null;
+  graph.meta.interaction_pagerank={alpha,iterations,residual,node_count:nodes.length,edge_count:edges.length,weight:'distinct_eligible_videos',scope:'eligible_interaction_endpoints'};
+}
+module.exports={makeGraph,makeDirectedWeightedGraph,partition,ari,pageRank,followRanking,applyInteractionRanking};

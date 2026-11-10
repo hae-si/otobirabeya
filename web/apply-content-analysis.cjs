@@ -4,6 +4,7 @@ const dir=process.argv[2],graph=JSON.parse(fs.readFileSync(dir+'/graph.json')),r
 require('./language-scope.cjs').classifyLanguage(graph,content.edges);
 require('./collaboration-cosine.cjs').applyCollaborationCosine(graph);
 if(content.meta.available||graph.additional_edges?.length||graph.interaction_edges?.length){
+ require('./network-analysis.cjs').applyInteractionRanking(graph);
  const additionalEdges=graph.additional_edges||[],interactionEdges=graph.interaction_edges||[],result=unifiedPartition(graph.nodes,graph.edges,content.edges,{additionalEdges,interactionEdges});
  graph.meta.legacy_baseline={community_count:graph.meta.community_count,modularity:graph.meta.modularity,formula:graph.meta.formula};
  const layout=require('./unified-layout.cjs').layoutUnified(graph.nodes,graph.edges,content.edges,result.parameters,{additionalEdges,interactionEdges});

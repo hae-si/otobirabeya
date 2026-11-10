@@ -39,7 +39,7 @@ function filterView(nodes,edges,options={}){
  return {nodes:view.nodes,edges:drawn,qualifying,filters:c,strengths:strength};
 }
 function statistics(nodes,edges,{groupMode='community',events={}}={}){
- const metrics=new Map(nodes.map(n=>[n.id,{id:n.id,label:n.label,language:n.language_class||null,group:groupKey(n,groupMode),pagerank:n.pagerank??null,creation_neighbors:new Set(),creation_strength:0,follow_in:0,follow_out:0,interaction_in:0,interaction_out:0,reciprocal_out:0,song_neighbors:new Set(),source_neighbors:new Set(),works:new Set()}]));
+ const metrics=new Map(nodes.map(n=>[n.id,{id:n.id,label:n.label,language:n.language_class||null,group:groupKey(n,groupMode),pagerank:n.pagerank??null,interaction_pagerank:n.interaction_pagerank??null,creation_neighbors:new Set(),creation_strength:0,follow_in:0,follow_out:0,interaction_in:0,interaction_out:0,reciprocal_out:0,song_neighbors:new Set(),source_neighbors:new Set(),works:new Set()}]));
  const groups=new Map(),layers={creation:0,follow:0,song:0,source:0,interaction:0},matrix={creation:new Map(),follow:new Map(),song:new Map(),source:new Map(),interaction:new Map()},pairs=new Set(),active=new Set();
  const byId=new Map(nodes.map(n=>[n.id,n]));let duplicateAccountDirections=0;
  for(const e of edges){if(!['creation','follow','content','interaction'].includes(e.type)||!metrics.has(e.source)||!metrics.has(e.target))continue;
